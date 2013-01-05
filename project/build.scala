@@ -16,5 +16,5 @@ object build extends Build {
       "javax.servlet"           % "javax.servlet-api"         % "3.0.1"  % "provided",
       "org.scalatest"          %% "scalatest"                 % "1.8"    % "test"
     )
-  )
+  ).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
 }
