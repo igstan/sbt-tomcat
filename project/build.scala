@@ -13,16 +13,16 @@ object build extends Build {
   lazy val reload = TaskKey[Unit]("reload")
 
   val main = Project("sbt-tomcat", file(".")).settings(
-    workDirectory <<= target(_ / "tomcat"),
-    port in Tomcat := 8080,
-    organization   := "ro.igstan",
-    version        := "0.1.0",
-    sbtPlugin      := true,
-    crossPaths     := false,
-    scalaVersion   := "2.9.2",
-    scalacOptions ++= Seq("-unchecked", "-deprecation"),
-    javacOptions  ++= Seq("-Xlint:unchecked", "-Xlint:deprecation"),
-    libraryDependencies ++= Seq(
+    workDirectory in Tomcat <<= target(_ / "tomcat"),
+    port in Tomcat           := 8080,
+    organization             := "ro.igstan",
+    version                  := "0.1.0",
+    sbtPlugin                := true,
+    crossPaths               := false,
+    scalaVersion             := "2.9.2",
+    scalacOptions           ++= Seq("-unchecked", "-deprecation"),
+    javacOptions            ++= Seq("-Xlint:unchecked", "-Xlint:deprecation"),
+    libraryDependencies     ++= Seq(
       "javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided"
     ),
 
@@ -32,7 +32,7 @@ object build extends Build {
         onUnload(state)
     },
 
-    start in Tomcat <<= (compile in Compile, workDirectory, baseDirectory, classDirectory in Compile, streams, port in Tomcat) map {
+    start in Tomcat <<= (compile in Compile, workDirectory in Tomcat, baseDirectory, classDirectory in Compile, streams, port in Tomcat) map {
       (_, workDirectory, baseDirectory, classDirectory, streams, port) => {
         tomcat.start(workDirectory, baseDirectory, classDirectory, port, streams.log)
       }
