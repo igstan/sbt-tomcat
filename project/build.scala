@@ -22,12 +22,8 @@ object build extends Build {
     scalacOptions ++= Seq("-unchecked", "-deprecation"),
     javacOptions  ++= Seq("-Xlint:unchecked", "-Xlint:deprecation"),
     libraryDependencies ++= Seq(
-      "org.apache.tomcat.embed" % "tomcat-embed-core"         % "7.0.34",
-      "org.apache.tomcat.embed" % "tomcat-embed-logging-juli" % "7.0.34",
-      "org.apache.tomcat.embed" % "tomcat-embed-jasper"       % "7.0.34",
-      "org.apache.tomcat"       % "tomcat-catalina"           % "7.0.34",
-      "javax.servlet"           % "javax.servlet-api"         % "3.0.1"  % "provided",
-      "org.scalatest"          %% "scalatest"                 % "1.8"    % "test"
+      "javax.servlet"  % "javax.servlet-api" % "3.0.1" % "provided",
+      "org.scalatest" %% "scalatest"         % "1.8"   % "test"
     ),
 
     onUnload in Global <<= (onUnload in Global, streams) {
