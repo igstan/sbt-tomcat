@@ -43,6 +43,7 @@ object build extends Build {
     },
 
     stop in Tomcat <<= streams.map { (streams) => tomcat.stop(streams.log) },
+
     reload in Tomcat <<= (compile in Compile, streams).map {
       (_, streams) => tomcat.reload(streams.log)
     }
@@ -88,7 +89,6 @@ object tomcat {
 
   def reload(logger: Logger) {
     if (tomcat != null) {
-      println(context)
       context.reload
     } else {
       logger.warn("Command ignored. No Tomcat instance is currently running.")
