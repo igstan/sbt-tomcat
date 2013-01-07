@@ -63,8 +63,8 @@ object tomcat {
       tomcat = new Tomcat()
       tomcat.setBaseDir(workDirectory.getAbsolutePath)
       tomcat.setPort(port)
-      val webappDirLocation = baseDirectory / "src" / "main" / "webapp"
-      context = tomcat.addWebapp(contextPath, webappDirLocation.getAbsolutePath)
+      val webappDirectory = baseDirectory / "src" / "main" / "webapp"
+      context = tomcat.addWebapp(contextPath, webappDirectory.getAbsolutePath)
       context.setReloadable(true)
       val loader = new WebappLoader(toLoader(classDirectory, getClass.getClassLoader))
       loader.addRepository(classDirectory.toURI.toString)
