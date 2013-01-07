@@ -5,7 +5,7 @@ import sbt.classpath.ClasspathUtilities.toLoader
 object build extends Build {
   val Tomcat = config("tomcat")
 
-  lazy val workDirectory = SettingKey[File]("work-directory")
+  lazy val baseDirectory = SettingKey[File]("base-directory")
   lazy val webappDirectory = SettingKey[File]("webapp-directory")
   lazy val contextPath = SettingKey[String]("context-path")
   lazy val port = SettingKey[Int]("port")
@@ -15,7 +15,7 @@ object build extends Build {
   lazy val reload = TaskKey[Unit]("reload")
 
   val main = Project("sbt-tomcat", file(".")).settings(
-    workDirectory in Tomcat   <<= target(_ / "tomcat"),
+    baseDirectory in Tomcat   <<= target(_ / "tomcat"),
     webappDirectory in Tomcat <<= baseDirectory(_ / "src" / "main" / "webapp"),
     port in Tomcat             := 8080,
     contextPath in Tomcat      := "/",
@@ -36,9 +36,9 @@ object build extends Build {
         onUnload(state)
     },
 
-    start in Tomcat <<= (compile in Compile, workDirectory in Tomcat, webappDirectory in Tomcat, classDirectory in Compile, streams, port in Tomcat, contextPath in Tomcat) map {
-      (_, workDirectory, webappDirectory, classDirectory, streams, port, contextPath) => {
-        tomcat.start(workDirectory, webappDirectory, classDirectory, port, contextPath, streams.log)
+    start in Tomcat <<= (compile in Compile, baseDirectory in Tomcat, webappDirectory in Tomcat, classDirectory in Compile, streams, port in Tomcat, contextPath in Tomcat) map {
+      (_, baseDirectory, webappDirectory, classDirectory, streams, port, contextPath) => {
+        tomcat.start(baseDirectory, webappDirectory, classDirectory, port, contextPath, streams.log)
       }
     },
 
@@ -58,12 +58,12 @@ object tomcat {
   var tomcat: Tomcat = _
   var context: Context = _
 
-  def start(workDirectory: File, webappDirectory: File, classDirectory: File, port: Int, contextPath: String, logger: Logger) {
+  def start(baseDirectory: File, webappDirectory: File, classDirectory: File, port: Int, contextPath: String, logger: Logger) {
     if (tomcat != null) {
       logger.warn("Command ignored. Tomcat is already running.")
     } else {
       tomcat = new Tomcat()
-      tomcat.setBaseDir(workDirectory.getAbsolutePath)
+      tomcat.setBaseDir(baseDirectory.getAbsolutePath)
       tomcat.setPort(port)
       context = tomcat.addWebapp(contextPath, webappDirectory.getAbsolutePath)
       context.setReloadable(true)
