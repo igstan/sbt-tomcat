@@ -6,6 +6,7 @@ object build extends Build {
   val Tomcat = config("tomcat")
 
   lazy val workDirectory = SettingKey[File]("work-directory")
+  lazy val contextPath = SettingKey[String]("context-path")
   lazy val port = SettingKey[Int]("port")
 
   lazy val start  = TaskKey[Unit]("start")
@@ -15,6 +16,7 @@ object build extends Build {
   val main = Project("sbt-tomcat", file(".")).settings(
     workDirectory in Tomcat <<= target(_ / "tomcat"),
     port in Tomcat           := 8080,
+    contextPath in Tomcat    := "/",
     organization             := "ro.igstan",
     version                  := "0.1.0",
     sbtPlugin                := true,
@@ -32,9 +34,9 @@ object build extends Build {
         onUnload(state)
     },
 
-    start in Tomcat <<= (compile in Compile, workDirectory in Tomcat, baseDirectory, classDirectory in Compile, streams, port in Tomcat) map {
-      (_, workDirectory, baseDirectory, classDirectory, streams, port) => {
-        tomcat.start(workDirectory, baseDirectory, classDirectory, port, streams.log)
+    start in Tomcat <<= (compile in Compile, workDirectory in Tomcat, baseDirectory, classDirectory in Compile, streams, port in Tomcat, contextPath in Tomcat) map {
+      (_, workDirectory, baseDirectory, classDirectory, streams, port, contextPath) => {
+        tomcat.start(workDirectory, baseDirectory, classDirectory, port, contextPath, streams.log)
       }
     },
 
@@ -54,7 +56,7 @@ object tomcat {
   var tomcat: Tomcat = _
   var context: Context = _
 
-  def start(workDirectory: File, baseDirectory: File, classDirectory: File, port: Int, logger: Logger) {
+  def start(workDirectory: File, baseDirectory: File, classDirectory: File, port: Int, contextPath: String, logger: Logger) {
     if (tomcat != null) {
       logger.warn("Command ignored. Tomcat is already running.")
     } else {
@@ -62,7 +64,7 @@ object tomcat {
       tomcat.setBaseDir(workDirectory.getAbsolutePath)
       tomcat.setPort(port)
       val webappDirLocation = baseDirectory / "src" / "main" / "webapp"
-      context = tomcat.addWebapp("/", webappDirLocation.getAbsolutePath)
+      context = tomcat.addWebapp(contextPath, webappDirLocation.getAbsolutePath)
       context.setReloadable(true)
       val loader = new WebappLoader(toLoader(classDirectory, getClass.getClassLoader))
       loader.addRepository(classDirectory.toURI.toString)
