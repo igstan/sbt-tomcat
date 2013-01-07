@@ -6,6 +6,7 @@ object build extends Build {
   val Tomcat = config("tomcat")
 
   lazy val workDirectory = SettingKey[File]("work-directory")
+  lazy val webappDirectory = SettingKey[File]("webapp-directory")
   lazy val contextPath = SettingKey[String]("context-path")
   lazy val port = SettingKey[Int]("port")
 
@@ -14,17 +15,18 @@ object build extends Build {
   lazy val reload = TaskKey[Unit]("reload")
 
   val main = Project("sbt-tomcat", file(".")).settings(
-    workDirectory in Tomcat <<= target(_ / "tomcat"),
-    port in Tomcat           := 8080,
-    contextPath in Tomcat    := "/",
-    organization             := "ro.igstan",
-    version                  := "0.1.0",
-    sbtPlugin                := true,
-    crossPaths               := false,
-    scalaVersion             := "2.9.2",
-    scalacOptions           ++= Seq("-unchecked", "-deprecation"),
-    javacOptions            ++= Seq("-Xlint:unchecked", "-Xlint:deprecation"),
-    libraryDependencies     ++= Seq(
+    workDirectory in Tomcat   <<= target(_ / "tomcat"),
+    webappDirectory in Tomcat <<= baseDirectory(_ / "src" / "main" / "webapp"),
+    port in Tomcat             := 8080,
+    contextPath in Tomcat      := "/",
+    organization               := "ro.igstan",
+    version                    := "0.1.0",
+    sbtPlugin                  := true,
+    crossPaths                 := false,
+    scalaVersion               := "2.9.2",
+    scalacOptions             ++= Seq("-unchecked", "-deprecation"),
+    javacOptions              ++= Seq("-Xlint:unchecked", "-Xlint:deprecation"),
+    libraryDependencies       ++= Seq(
       "javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided"
     ),
 
@@ -34,9 +36,9 @@ object build extends Build {
         onUnload(state)
     },
 
-    start in Tomcat <<= (compile in Compile, workDirectory in Tomcat, baseDirectory, classDirectory in Compile, streams, port in Tomcat, contextPath in Tomcat) map {
-      (_, workDirectory, baseDirectory, classDirectory, streams, port, contextPath) => {
-        tomcat.start(workDirectory, baseDirectory, classDirectory, port, contextPath, streams.log)
+    start in Tomcat <<= (compile in Compile, workDirectory in Tomcat, webappDirectory in Tomcat, classDirectory in Compile, streams, port in Tomcat, contextPath in Tomcat) map {
+      (_, workDirectory, webappDirectory, classDirectory, streams, port, contextPath) => {
+        tomcat.start(workDirectory, webappDirectory, classDirectory, port, contextPath, streams.log)
       }
     },
 
@@ -56,14 +58,13 @@ object tomcat {
   var tomcat: Tomcat = _
   var context: Context = _
 
-  def start(workDirectory: File, baseDirectory: File, classDirectory: File, port: Int, contextPath: String, logger: Logger) {
+  def start(workDirectory: File, webappDirectory: File, classDirectory: File, port: Int, contextPath: String, logger: Logger) {
     if (tomcat != null) {
       logger.warn("Command ignored. Tomcat is already running.")
     } else {
       tomcat = new Tomcat()
       tomcat.setBaseDir(workDirectory.getAbsolutePath)
       tomcat.setPort(port)
-      val webappDirectory = baseDirectory / "src" / "main" / "webapp"
       context = tomcat.addWebapp(contextPath, webappDirectory.getAbsolutePath)
       context.setReloadable(true)
       val loader = new WebappLoader(toLoader(classDirectory, getClass.getClassLoader))
