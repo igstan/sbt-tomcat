@@ -6,7 +6,6 @@ import javax.servlet.http.HttpServletResponse
 
 class MainServlet extends HttpServlet {
   override def doGet(req: HttpServletRequest, res: HttpServletResponse) {
-    res.setContentType("text/html")
-    res.getWriter.write("<h1>Hello!</h1>")
+    res.getWriter.write("SERVLET FILE!!!")
   }
 }
