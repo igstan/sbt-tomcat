@@ -1,16 +1,14 @@
 import sbt._
 import sbt.Keys._
 import sbt.classpath.ClasspathUtilities.toLoader
-import org.apache.catalina.Context
-import org.apache.catalina.loader.WebappLoader
-import org.apache.catalina.startup.Tomcat
 
 object build extends Build {
+  val Tomcat = config("tomcat")
   lazy val workDirectory = SettingKey[File]("work-directory")
 
-  lazy val tomcatStart  = TaskKey[Unit]("tomcat-start")
-  lazy val tomcatStop   = TaskKey[Unit]("tomcat-stop")
-  lazy val tomcatReload = TaskKey[Unit]("tomcat-reload")
+  lazy val start  = TaskKey[Unit]("start")
+  lazy val stop   = TaskKey[Unit]("stop")
+  lazy val reload = TaskKey[Unit]("reload")
 
   val main = Project("sbt-tomcat", file(".")).settings(
     workDirectory <<= target(_ / "tomcat"),
@@ -31,14 +29,14 @@ object build extends Build {
         onUnload(state)
     },
 
-    tomcatStart <<= (compile in Compile, workDirectory, baseDirectory, classDirectory in Compile, streams) map {
+    start in Tomcat <<= (compile in Compile, workDirectory, baseDirectory, classDirectory in Compile, streams) map {
       (_, workDirectory, baseDirectory, classDirectory, streams) => {
         tomcat.start(workDirectory, baseDirectory, classDirectory, streams.log)
       }
     },
 
-    tomcatStop   <<= streams.map { (streams) => tomcat.stop(streams.log) },
-    tomcatReload <<= (compile in Compile, streams).map {
+    stop in Tomcat <<= streams.map { (streams) => tomcat.stop(streams.log) },
+    reload in Tomcat <<= (compile in Compile, streams).map {
       (_, streams) => tomcat.reload(streams.log)
     }
 
@@ -46,6 +44,10 @@ object build extends Build {
 }
 
 object tomcat {
+  import org.apache.catalina.Context
+  import org.apache.catalina.loader.WebappLoader
+  import org.apache.catalina.startup.Tomcat
+
   var tomcat: Tomcat = _
   var context: Context = _
 
