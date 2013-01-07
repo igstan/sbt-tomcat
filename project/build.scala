@@ -4,7 +4,9 @@ import sbt.classpath.ClasspathUtilities.toLoader
 
 object build extends Build {
   val Tomcat = config("tomcat")
+
   lazy val workDirectory = SettingKey[File]("work-directory")
+  lazy val port = SettingKey[Int]("port")
 
   lazy val start  = TaskKey[Unit]("start")
   lazy val stop   = TaskKey[Unit]("stop")
@@ -12,6 +14,7 @@ object build extends Build {
 
   val main = Project("sbt-tomcat", file(".")).settings(
     workDirectory <<= target(_ / "tomcat"),
+    port in Tomcat := 8080,
     organization   := "ro.igstan",
     version        := "0.1.0",
     sbtPlugin      := true,
@@ -29,9 +32,9 @@ object build extends Build {
         onUnload(state)
     },
 
-    start in Tomcat <<= (compile in Compile, workDirectory, baseDirectory, classDirectory in Compile, streams) map {
-      (_, workDirectory, baseDirectory, classDirectory, streams) => {
-        tomcat.start(workDirectory, baseDirectory, classDirectory, streams.log)
+    start in Tomcat <<= (compile in Compile, workDirectory, baseDirectory, classDirectory in Compile, streams, port in Tomcat) map {
+      (_, workDirectory, baseDirectory, classDirectory, streams, port) => {
+        tomcat.start(workDirectory, baseDirectory, classDirectory, port, streams.log)
       }
     },
 
@@ -51,13 +54,13 @@ object tomcat {
   var tomcat: Tomcat = _
   var context: Context = _
 
-  def start(workDirectory: File, baseDirectory: File, classDirectory: File, logger: Logger) {
+  def start(workDirectory: File, baseDirectory: File, classDirectory: File, port: Int, logger: Logger) {
     if (tomcat != null) {
       logger.warn("Command ignored. Tomcat is already running.")
     } else {
       tomcat = new Tomcat()
       tomcat.setBaseDir(workDirectory.getAbsolutePath)
-      tomcat.setPort(9090)
+      tomcat.setPort(port)
       val webappDirLocation = baseDirectory / "src" / "main" / "webapp"
       context = tomcat.addWebapp("/", webappDirLocation.getAbsolutePath)
       context.setReloadable(true)
