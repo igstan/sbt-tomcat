@@ -22,8 +22,7 @@ object build extends Build {
     scalacOptions ++= Seq("-unchecked", "-deprecation"),
     javacOptions  ++= Seq("-Xlint:unchecked", "-Xlint:deprecation"),
     libraryDependencies ++= Seq(
-      "javax.servlet"  % "javax.servlet-api" % "3.0.1" % "provided",
-      "org.scalatest" %% "scalatest"         % "1.8"   % "test"
+      "javax.servlet" % "javax.servlet-api" % "3.0.1" % "provided"
     ),
 
     onUnload in Global <<= (onUnload in Global, streams) {
